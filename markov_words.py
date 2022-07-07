@@ -2,14 +2,14 @@ import os
 import re
 
 def main():
-	file_path_input = "lorem.txt"
+	file_path_input = input("which file to break up? ")
 	file_path_output = "separated_" + file_path_input
 	word1 = "****"
 	word2 = "***"
 	word3 = "**"
 	word4 = "*"
 
-	with open(file_path_input) as file:
+	with open(file_path_input,encoding='utf8') as file:
 		for line in file:
 			for word in line.split():
 				word = re.sub(r'[^\w]', '', word).lower()
