@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from MarkovModel import *
 import random
 import os
 from os import path
@@ -9,7 +8,6 @@ from os import path
 class MarkovWindow(QMainWindow):
 		def __init__(self):
 			super(MarkovWindow, self).__init__()
-			self.model = MarkovModel
 			self.setGeometry(800,500,600,400)
 			self.setWindowTitle("Predictive Text Generator")
 
@@ -104,6 +102,10 @@ class MarkovWindow(QMainWindow):
 			else:
 				self.startBtn.setText("Wrong number of starter words. Try again...")
 
+		# populateSequences()
+		# Adds all lines from the file specified in the
+		# comboBox to a list
+
 		def populateSequences(self):
 		 	self.seq_list = []
 
@@ -114,41 +116,49 @@ class MarkovWindow(QMainWindow):
 		 			self.seq_list.append(line)
 		 	self.populateButtons()
 
+		 # populateButtons()
+		 # Finds lines that match the previous two words
+		 # and suggests the next one
+
 		def populateButtons(self):
 			self.line2 = ""
-			poss_seq = []
+			self.poss_seq = []
 			seq_dict = {}
 			count=1
 			for seq in self.seq_list:
 				if (self.line1.split()[0:2] == seq.split()[0:2]):
-					poss_seq.append(seq)
-			for seq in poss_seq:
-				if seq in seq_dict.keys():
-					seq_dict[seq] += 1
-				else:
-					seq_dict[seq] = 1
-			sorted_list = sorted(seq_dict.items(), key=lambda x:x[1],reverse=True)
-			sorted_seq = dict(sorted_list)
-			# sort = self.weightedPredict(seq_dict)
-			print(sorted_seq)
-			i=0
+					self.poss_seq.append(seq)
+			denylist = []
 			for button in self.buttons:
 				try:
-					key = list(sorted_seq.keys())[i]
-					seq = "".join(key)
+					key = random.choice(self.poss_seq)
+					count = 1
+					while (key in denylist):
+						key = random.choice(self.poss_seq)
+						if (count > 50):
+							key = ""
+							break
+						count+=1
+					denylist.append(key)
+					print(key)
+					seq = " ".join(key.split()[-2:])
 					word = "".join(key.split()[-1:])
 					button.setText(word)
 					button.setEnabled(True)
 					button.setProperty("mySeq", seq)
-					i+=1
 				except:
-					print("not enough options")
+					traceback.print_exc()
 					button.setText("")
 					button.setProperty("mySeq", "")
 					button.setEnabled(False)
+			denylist = []
+
+
+		# nextWord()
+		# Adds the chosen word to the end of the sentence
+		# and calls for the buttons to populate again
 
 		def nextWord(self):
-			print("click succeeded")
 			clicked = self.sender()
 			seq = clicked.property("mySeq")
 			self.line2 = " ".join(seq.split()[-2:])
